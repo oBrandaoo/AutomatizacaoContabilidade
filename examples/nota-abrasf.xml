@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- EXEMPLO SINTÉTICO SEM VALIDADE FISCAL. Não contém assinatura digital. -->
+<CompNfse xmlns="http://www.abrasf.org.br/nfse.xsd">
+  <Nfse versao="2.04"><InfNfse Id="EXEMPLO_2001">
+    <Numero>2001</Numero><CodigoVerificacao>DEMO2001</CodigoVerificacao><DataEmissao>2026-09-02T09:00:00</DataEmissao>
+    <ValoresNfse><ValorIss>36.90</ValorIss><ValorLiquidoNfse>1193.10</ValorLiquidoNfse></ValoresNfse>
+    <PrestadorServico><IdentificacaoPrestador><CpfCnpj><Cnpj>98765432000198</Cnpj></CpfCnpj></IdentificacaoPrestador><RazaoSocial>Prestador fictício — exemplo</RazaoSocial></PrestadorServico>
+    <OrgaoGerador><CodigoMunicipio>3132404</CodigoMunicipio><Uf>MG</Uf></OrgaoGerador>
+    <DeclaracaoPrestacaoServico><InfDeclaracaoPrestacaoServico>
+      <Competencia>2026-09-01</Competencia>
+      <Servico><Valores><ValorServicos>1230.00</ValorServicos><ValorDeducoes>0.00</ValorDeducoes><ValorPis>0.00</ValorPis><ValorCofins>0.00</ValorCofins></Valores><IssRetido>1</IssRetido><ItemListaServico>1.06</ItemListaServico><Discriminacao>Manutenção de demonstração. Documento sintético, sem validade fiscal.</Discriminacao></Servico>
+      <TomadorServico><IdentificacaoTomador><CpfCnpj><Cnpj>12345678000195</Cnpj></CpfCnpj></IdentificacaoTomador><RazaoSocial>Cliente de demonstração</RazaoSocial></TomadorServico>
+    </InfDeclaracaoPrestacaoServico></DeclaracaoPrestacaoServico>
+  </InfNfse></Nfse>
+</CompNfse>

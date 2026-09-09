@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- EXEMPLO SINTÉTICO SEM VALIDADE FISCAL. Não contém assinatura digital. -->
+<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">
+  <infNFSe Id="NFS315960512345678000195000000000000000000000000000001">
+    <xLocEmi>Santa Rita do Sapucaí / MG</xLocEmi>
+    <nNFSe>1001</nNFSe><dhProc>2026-09-01T10:30:00-03:00</dhProc>
+    <emit><CNPJ>12345678000195</CNPJ><xNome>Cliente de demonstração</xNome></emit>
+    <valores><vISSQN>75.00</vISSQN><vLiq>2500.00</vLiq></valores>
+    <DPS versao="1.01"><infDPS Id="DPS_EXEMPLO">
+      <dhEmi>2026-09-01T10:30:00-03:00</dhEmi><dCompet>2026-09-01</dCompet><cLocEmi>3159605</cLocEmi>
+      <prest><CNPJ>12345678000195</CNPJ></prest>
+      <toma><CNPJ>98765432000198</CNPJ><xNome>Tomador fictício — exemplo</xNome></toma>
+      <serv><cServ><cTribNac>010601</cTribNac><xDescServ>Serviços de demonstração. Documento sintético para testar a importação; sem validade fiscal.</xDescServ></cServ></serv>
+      <valores><vServPrest><vServ>2500.00</vServ></vServPrest><trib><tribMun><tpRetISSQN>1</tpRetISSQN></tribMun></trib></valores>
+    </infDPS></DPS>
+  </infNFSe>
+</NFSe>
