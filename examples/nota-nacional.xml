@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- EXEMPLO SINTÉTICO SEM VALIDADE FISCAL. Não contém assinatura digital. -->
 <NFSe xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">
-  <infNFSe Id="NFS315960512345678000195000000000000000000000000000001">
+  <infNFSe Id="NFS31596051234567800019500000000000000000000000000001">
     <xLocEmi>Santa Rita do Sapucaí / MG</xLocEmi>
     <nNFSe>1001</nNFSe><dhProc>2026-09-01T10:30:00-03:00</dhProc>
     <emit><CNPJ>12345678000195</CNPJ><xNome>Cliente de demonstração</xNome></emit>

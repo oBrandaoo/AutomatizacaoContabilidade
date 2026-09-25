@@ -52,6 +52,21 @@ def sample(name='nota-nacional.xml'):
     return (ROOT / 'examples' / name).read_bytes()
 
 
+def test_issuer_is_configured_per_installation(tmp_path):
+    first = create_app({'TESTING': True, 'DATABASE': str(tmp_path / 'first.sqlite3')}).test_client()
+    second = create_app({'TESTING': True, 'DATABASE': str(tmp_path / 'second.sqlite3')}).test_client()
+    payload = {'name': 'Prestadora em Santa Rita', 'document': '12.345.678/0001-95',
+               'city': 'Santa Rita do Sapucaí / MG', 'city_code': '3159605',
+               'municipal_registration': '123', 'tax_regime': 'Simples Nacional'}
+    assert first.get('/api/issuer').json is None
+    assert second.get('/api/issuer').json is None
+    assert first.put('/api/issuer', json=payload).status_code == 403
+    assert first.put('/api/issuer', json={**payload, 'city_code': '31596'}, headers=HEADERS).status_code == 400
+    assert first.put('/api/issuer', json=payload, headers=HEADERS).status_code == 200
+    assert first.get('/api/issuer').json['document'] == '12345678000195'
+    assert second.get('/api/issuer').json is None
+
+
 def test_national_and_abrasf_data_and_missing_values():
     national = parse_xml(sample())[0]
     assert national['number'] == '1001'

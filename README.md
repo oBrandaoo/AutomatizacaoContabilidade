@@ -1,6 +1,12 @@
 # Notas — organização de NFS-e
 
-Aplicação web local para importar notas de serviço emitidas e recebidas, conferir dados e exportar Excel com colunas personalizadas. Interface em português, sem serviços externos para processar os documentos.
+Aplicação web local para importar notas de serviço emitidas e recebidas, conferir dados e exportar Excel com colunas personalizadas. Interface em português, sem serviços externos para processar os documentos. **Esta aplicação ainda não emite NFS-e:** a página **Emitir NFS-e** abre o Emissor Público Nacional para emissão com validade fiscal.
+
+## Instalação para cada emitente
+
+O produto está sendo preparado para uma instalação separada por CNPJ emitente. Em **Emitir NFS-e**, cadastre o emitente da instalação (razão social, CNPJ, município, código IBGE, inscrição municipal e regime tributário). Este cadastro não transmite notas nem armazena o certificado A1. A integração fiscal direta ainda depende de DPS assinada, credenciamento no Emissor Nacional e validação em homologação para o regime e serviço do emitente.
+
+Cada instalação deve usar seu próprio banco `data/notas.sqlite3`. Em implantações separadas que usam o mesmo código, defina a variável de ambiente `NFSE_DATABASE` com um caminho absoluto diferente para cada cliente antes de iniciar. Não copie a pasta `data` de um cliente para outro nem inclua certificados ou senhas no projeto distribuído.
 
 ## Iniciar no Windows
 

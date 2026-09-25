@@ -15,8 +15,8 @@ const icons = {
   spark: '<path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/>',
 };
 function renderIcons(root = document) { $$('[data-icon]', root).forEach(el => { el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[el.dataset.icon] || icons.file}</svg>`; }); }
-const state = {clients: [], templates: [], items: [], page: 1, pages: 1, total: 0, direction: '', selected: new Set(), files: [], columns: [], config: null, reviewId: null, view: 'notas', requestId: 0};
-const labels = {notas:'Notas de serviço', clientes:'Clientes', importacoes:'Importações', modelos:'Modelos de Excel', integracoes:'Integrações'};
+const state = {clients: [], issuer: null, templates: [], items: [], page: 1, pages: 1, total: 0, direction: '', selected: new Set(), files: [], columns: [], config: null, reviewId: null, view: 'notas', requestId: 0};
+const labels = {notas:'Notas de serviço', clientes:'Clientes', importacoes:'Importações', modelos:'Modelos de Excel', emissao:'Emitir NFS-e', integracoes:'Integrações'};
 const brl = value => value == null ? 'Não informado' : Number(value).toLocaleString('pt-BR', {style:'currency',currency:'BRL'});
 const dateLabel = value => value ? value.slice(0,10).split('-').reverse().join('/') : 'Não informada';
 const docLabel = value => value?.length === 14 ? value.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, '$1.$2.$3/$4-$5') : value || 'Não informado';
@@ -55,6 +55,17 @@ async function loadClients() {
   }
   $('#nav-count').textContent=state.clients.reduce((sum,c)=>sum+c.invoice_count,0);
   renderClients();
+}
+async function loadIssuer() {
+  state.issuer=await json('/api/issuer');
+  const form=$('#issuer-form');
+  for (const name of ['name','document','city','city_code','municipal_registration','tax_regime']) {
+    form.elements[name].value=state.issuer?.[name] || '';
+  }
+  $('#issuer-status').textContent=state.issuer ? `Configurado para ${state.issuer.name}` : 'Nenhum emitente configurado';
+  $('#emission-local-guidance').innerHTML=state.issuer?.city_code==='3159605'
+    ? 'Em Santa Rita do Sapucaí, a <a href="https://santaritadosapucai.mg.issqn.quasar.srv.br/issqn/" target="_blank" rel="noopener noreferrer"><u>orientação do sistema municipal</u></a> é emitir novas notas somente pelo Portal Nacional.'
+    : 'Confirme no município do emitente se a emissão ocorre pelo Portal Nacional.';
 }
 function renderClients() {
   $('#client-list').innerHTML=state.clients.length ? state.clients.map(c=>`<article class="client-card"><span class="client-initial">${escapeHtml(c.name.slice(0,2).toUpperCase())}</span><h2>${escapeHtml(c.name)}</h2><p>${escapeHtml(docLabel(c.document))}</p><p>${escapeHtml(c.city)}</p><div class="card-footer"><span>${c.invoice_count} nota(s)</span><button class="text-button" data-client-notes="${c.id}">Ver notas →</button></div></article>`).join('') : '<div class="plain-empty"><h2>Sua carteira começa com um cliente</h2><p>Use “Novo cliente” para cadastrar o nome, CNPJ e cidade da empresa.</p></div>';
@@ -107,6 +118,7 @@ async function navigate() {
   try {
     if (state.view==='notas') await loadNotes();
     if (state.view==='clientes') await loadClients();
+    if (state.view==='emissao') await loadIssuer();
     if (state.view==='modelos') await loadTemplates();
     if (state.view==='importacoes') await loadHistory();
   } catch(error) {toast(error.message,true);}
@@ -181,6 +193,13 @@ $('#client-form').addEventListener('submit',async event=>{
   try {const result=await json('/api/clients',{method:'POST',body:Object.fromEntries(new FormData(event.target))});await loadClients();$('#client-dialog').close();toast('Cliente cadastrado. Você já pode importar as notas.');if(state.view==='notas'){await loadNotes();openImport();$('#import-client').value=result.id;}}
   catch(error){errorIn('#client-dialog',error);}finally{button.disabled=false;}
 });
+$('#issuer-form').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const button=$('button[type="submit"]',event.target);button.disabled=true;
+  $('.form-error',event.target).textContent='';
+  try {await json('/api/issuer',{method:'PUT',body:Object.fromEntries(new FormData(event.target))});await loadIssuer();toast('Dados do emitente salvos nesta instalação.');}
+  catch(error){errorIn('#issuer-form',error);}finally{button.disabled=false;}
+});
 $('#file-input').addEventListener('change',event=>chooseFiles(event.target.files));
 for (const name of ['dragover','dragenter'])$('#dropzone').addEventListener(name,event=>{event.preventDefault();$('#dropzone').classList.add('dragging');});
 $('#dropzone').addEventListener('dragleave',()=>$('#dropzone').classList.remove('dragging'));
@@ -234,5 +253,5 @@ $('#review-form').addEventListener('submit',async event=>{
   try{const data=Object.fromEntries(new FormData(event.target));data.review_status=$('#review-complete').checked?'Conferida':'Pendente';await json(`/api/invoices/${state.reviewId}`,{method:'PATCH',body:data});$('#review-dialog').close();toast('Conferência salva. Os arquivos originais foram preservados.');await loadNotes();}
   catch(error){errorIn('#review-dialog',error);}finally{button.disabled=false;}
 });
-async function init(){renderIcons();try{state.config=await json('/api/config');await Promise.all([loadClients(),loadTemplates()]);await navigate();}catch(error){toast(error.message,true);$('#notes-empty h2').textContent='Não foi possível carregar os dados';$('#notes-empty p').textContent=error.message;}}
+async function init(){renderIcons();try{state.config=await json('/api/config');await Promise.all([loadClients(),loadTemplates(),loadIssuer()]);await navigate();}catch(error){toast(error.message,true);$('#notes-empty h2').textContent='Não foi possível carregar os dados';$('#notes-empty p').textContent=error.message;}}
 init();

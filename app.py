@@ -4,7 +4,9 @@ from decimal import Decimal
 from hashlib import sha256
 from io import BytesIO
 import json
+import os
 from pathlib import Path
+import re
 import sqlite3
 import zipfile
 
@@ -35,12 +37,17 @@ CREATE TABLE IF NOT EXISTS imports (
  created_at TEXT NOT NULL, result TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS templates (
  id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, columns TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS issuer_settings (
+ id INTEGER PRIMARY KEY CHECK (id = 1), name TEXT NOT NULL,
+ document TEXT NOT NULL, city TEXT NOT NULL, city_code TEXT NOT NULL,
+ municipal_registration TEXT NOT NULL, tax_regime TEXT NOT NULL,
+ updated_at TEXT NOT NULL);
 '''
 
 
 def create_app(test_config=None):
     app = Flask(__name__)
-    app.config.update(DATABASE=str(ROOT / 'data' / 'notas.sqlite3'), MAX_CONTENT_LENGTH=60 * 1024 * 1024,
+    app.config.update(DATABASE=os.environ.get('NFSE_DATABASE', str(ROOT / 'data' / 'notas.sqlite3')), MAX_CONTENT_LENGTH=60 * 1024 * 1024,
                       TRUSTED_HOSTS=['localhost', '127.0.0.1', '[::1]'])
     if test_config:
         app.config.update(test_config)
@@ -152,6 +159,42 @@ def create_app(test_config=None):
     @app.get('/api/clients')
     def clients():
         return jsonify([dict(r) for r in db().execute('SELECT c.*, COUNT(i.id) AS invoice_count FROM clients c LEFT JOIN invoices i ON i.client_id=c.id GROUP BY c.id ORDER BY c.name')])
+
+    @app.get('/api/issuer')
+    def issuer():
+        row = db().execute('SELECT * FROM issuer_settings WHERE id=1').fetchone()
+        return jsonify(dict(row) if row else None)
+
+    @app.put('/api/issuer')
+    def save_issuer():
+        data = body()
+        name = str(data.get('name', '')).strip()
+        doc = document(data.get('document', ''))
+        city = str(data.get('city', '')).strip()
+        city_code = str(data.get('city_code', '')).strip()
+        registration = str(data.get('municipal_registration', '')).strip()
+        tax_regime = str(data.get('tax_regime', '')).strip()
+        if not name or len(name) > 150:
+            raise ValueError('Informe a razão social do emitente (até 150 caracteres).')
+        if len(doc) != 14 or not doc[-2:].isdigit():
+            raise ValueError('Informe o CNPJ do emitente com 14 posições.')
+        if not city or len(city) > 150:
+            raise ValueError('Informe a cidade e UF do estabelecimento emitente.')
+        if not re.fullmatch(r'\d{7}', city_code):
+            raise ValueError('Informe o código IBGE do município com 7 dígitos.')
+        if len(registration) > 30:
+            raise ValueError('A inscrição municipal deve ter até 30 caracteres.')
+        if tax_regime not in ('MEI', 'Simples Nacional', 'Lucro Presumido/Real'):
+            raise ValueError('Selecione o regime tributário do emitente.')
+        with db():
+            db().execute('''INSERT INTO issuer_settings
+                (id,name,document,city,city_code,municipal_registration,tax_regime,updated_at)
+                VALUES(1,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET
+                name=excluded.name, document=excluded.document, city=excluded.city,
+                city_code=excluded.city_code, municipal_registration=excluded.municipal_registration,
+                tax_regime=excluded.tax_regime, updated_at=excluded.updated_at''',
+                (name, doc, city, city_code, registration, tax_regime, datetime.now().isoformat(timespec='seconds')))
+        return jsonify(ok=True)
 
     @app.post('/api/clients')
     def add_client():
